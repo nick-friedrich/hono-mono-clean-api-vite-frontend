@@ -1,13 +1,13 @@
 import { OpenAPIHono } from '@hono/zod-openapi'
 import { createRoute } from '@hono/zod-openapi'
 import { HealthResponseSchema } from './types'
-import { getHealth } from './controller'
+import { getHealth } from './health.controller'
 
 const health = new OpenAPIHono()
 
 const route = createRoute({
   method: 'get',
-  path: '/api/v1/health',
+  path: '/',
   responses: {
     200: {
       content: {

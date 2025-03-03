@@ -5,11 +5,19 @@
   "author": "",
   "scripts": {
     "dev:backend": "pnpm --filter @apps/hono dev",
+    "test:backend": "pnpm --filter @apps/hono test",
+    "test:prisma": "pnpm --filter @packages/prisma test",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:packages": "pnpm run test:backend && pnpm run test:prisma",
     "dev:frontend": "pnpm --filter @apps/vite dev",
     "dev": "concurrently \"pnpm run dev:backend\" \"pnpm run dev:frontend\""
   },
   "devDependencies": {
     "typescript": "5.8.2",
-    "concurrently": "9.1.2"
+    "concurrently": "9.1.2",
+    "vitest": "^3.0.7",
+    "@vitest/coverage-v8": "^3.0.7"
   }
 }
