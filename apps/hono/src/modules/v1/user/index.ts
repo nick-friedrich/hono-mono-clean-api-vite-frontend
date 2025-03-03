@@ -7,7 +7,7 @@ const user = new OpenAPIHono()
 
 const userRoute = createRoute({
   method: 'get',
-  path: '/user/{id}',
+  path: '/{id}',
   responses: {
     200: {
       content: {

@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import health from './modules/v1/health'
 import auth from './modules/v1/auth'
+import user from './modules/v1/user'
 
 const app = new Hono()
 const api = app.basePath('/api')
@@ -11,6 +12,7 @@ const v1 = api.basePath('/v1')
  */
 v1.route('/health', health)
 v1.route('/auth', auth)
+v1.route('/user', user)
 
 
 /**
