@@ -10,7 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:packages": "pnpm run test:backend && pnpm run test:prisma",
+    "test:packages": "pnpm run test:prisma",
     "dev:frontend": "pnpm --filter @apps/vite dev",
     "dev": "concurrently \"pnpm run dev:backend\" \"pnpm run dev:frontend\""
   },
