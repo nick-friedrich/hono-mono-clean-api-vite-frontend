@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { AuthController } from '../auth.controller'
 import { AuthService } from '../auth.service'
 import { Context } from 'hono'
-import { ZodError } from 'zod'
 import { LoginRequestSchema, RegisterRequestSchema } from '../types'
 
 // Mock the AuthService
@@ -67,7 +66,7 @@ describe('AuthController', () => {
       // Assert
       expect(mockContext.req.json).toHaveBeenCalledTimes(1)
       expect(AuthService.login).toHaveBeenCalledWith(email, password)
-      expect(result).toEqual({ error: 'Invalid email or password' })
+      expect(result).toEqual({ error: "Invalid email or password" })
     })
 
     it('should return an error when request validation fails', async () => {
@@ -88,8 +87,6 @@ describe('AuthController', () => {
 
       // Assert
       expect(result).toEqual({ error: 'Validation error' })
-      expect(console.warn).not.toHaveBeenCalled() // No longer a ZodError
-
       // Restore original
       LoginRequestSchema.parse = parseOriginal;
     })
@@ -113,16 +110,17 @@ describe('AuthController', () => {
       // Assert
       expect(mockContext.req.json).toHaveBeenCalledTimes(1)
       expect(AuthService.register).toHaveBeenCalledWith(email, password, name)
-      expect(result).toEqual({ token: mockToken })
+      expect(result).toEqual({ token: mockToken, emailVerificationNeeded: false })
     })
 
     it('should return an error when registration fails due to existing user', async () => {
       // Arrange
       const email = 'existing@example.com'
       const password = 'password123'
+      const name = 'Existing User'
 
       // Setup mocks
-      mockContext.req.json = vi.fn().mockResolvedValue({ email, password })
+      mockContext.req.json = vi.fn().mockResolvedValue({ email, password, name })
       vi.mocked(AuthService.register).mockRejectedValue(new Error('User already exists'))
 
       // Act
@@ -130,8 +128,8 @@ describe('AuthController', () => {
 
       // Assert
       expect(mockContext.req.json).toHaveBeenCalledTimes(1)
-      expect(AuthService.register).toHaveBeenCalledWith(email, password, undefined)
-      expect(result).toEqual({ error: 'User already exists' })
+      expect(AuthService.register).toHaveBeenCalledWith(email, password, name)
+      expect(result).toEqual({ error: "User already exists" })
     })
 
     it('should return an error when request validation fails', async () => {
@@ -151,59 +149,10 @@ describe('AuthController', () => {
       const result = await AuthController.handleRegister(mockContext)
 
       // Assert
-      expect(result).toEqual({ error: 'Validation error' })
+      expect(result).toEqual({ error: "Validation error" })
 
       // Restore original
       RegisterRequestSchema.parse = parseOriginal;
-    })
-  })
-
-  describe('handleError', () => {
-    it('should log unexpected errors with stack trace', async () => {
-      // Arrange
-      const unexpectedError = new Error('Unexpected database error')
-
-      // Setup mock for the context
-      mockContext.req.json = vi.fn().mockResolvedValue({ email: 'test@example.com', password: 'password123' })
-
-      // Need to mock schema.parse to not interfere with this test
-      const parseOriginal = LoginRequestSchema.parse;
-      LoginRequestSchema.parse = vi.fn().mockReturnValue({ email: 'test@example.com', password: 'password123' });
-
-      vi.mocked(AuthService.login).mockRejectedValue(unexpectedError)
-
-      // Act
-      const result = await AuthController.handleLogin(mockContext)
-
-      // Assert
-      expect(result).toEqual({ error: 'Unexpected database error' })
-      expect(console.error).toHaveBeenCalled()
-
-      // Restore original
-      LoginRequestSchema.parse = parseOriginal;
-    })
-
-    it('should handle non-Error objects', async () => {
-      // Arrange
-      const nonError = 'Just a string error'
-
-      // Setup mocks for testing private method via public method
-      mockContext.req.json = vi.fn().mockResolvedValue({ email: 'test@example.com', password: 'password123' })
-
-      // Need to mock schema.parse to not interfere with this test
-      const parseOriginal = LoginRequestSchema.parse;
-      LoginRequestSchema.parse = vi.fn().mockReturnValue({ email: 'test@example.com', password: 'password123' });
-
-      vi.mocked(AuthService.login).mockRejectedValue(nonError)
-
-      // Act
-      const result = await AuthController.handleLogin(mockContext)
-
-      // Assert
-      expect(result).toEqual({ error: 'Authentication failed' })
-
-      // Restore original
-      LoginRequestSchema.parse = parseOriginal;
     })
   })
 }) 

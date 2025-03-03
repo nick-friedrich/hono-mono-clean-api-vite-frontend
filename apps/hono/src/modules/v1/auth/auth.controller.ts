@@ -1,14 +1,14 @@
 import { Context } from "hono";
-import { LoginRequestSchema, RegisterRequestSchema, RouteLoginResponse } from "./types";
+import { LoginRequestSchema, RegisterRequestSchema, RouteLoginResponse, RouteRegisterResponse } from "./types";
 import { AuthService } from "./auth.service";
 import { ZodError } from "zod";
 
-// Known business errors that don't need full error logging
-const EXPECTED_ERROR_MESSAGES = [
-  "User already exists",
-  "Invalid email or password"
-];
-
+/**
+ * Auth controller
+ * 
+ * @author Nick Friedrich
+ * 
+ */
 export class AuthController {
 
   /**
@@ -27,7 +27,10 @@ export class AuthController {
 
       return { token }
     } catch (error) {
-      return AuthController.handleError(error, "Authentication failed")
+      if (error instanceof ZodError) {
+        return { error: error.issues.map(issue => issue.message).join(", ") }
+      }
+      return { error: error instanceof Error ? error.message : "Authentication failed" }
     }
   }
 
@@ -36,7 +39,7 @@ export class AuthController {
    * @param c - Context
    * @returns Login response with token
    */
-  static async handleRegister(c: Context): Promise<RouteLoginResponse> {
+  static async handleRegister(c: Context): Promise<RouteRegisterResponse> {
     try {
       // Parse request body
       const body = await c.req.json()
@@ -45,32 +48,14 @@ export class AuthController {
       // Register user
       const token = await AuthService.register(email, password, name)
 
-      return { token }
+      return { token, emailVerificationNeeded: false }
     } catch (error) {
-      return AuthController.handleError(error, "Registration failed")
+      if (error instanceof ZodError) {
+        return { error: error.issues.map(issue => issue.message).join(", ") }
+      }
+      return { error: error instanceof Error ? error.message : "Registration failed" }
     }
   }
 
-  /**
-   * Handle errors consistently across controller methods
-   * @param error - The caught error
-   * @param defaultMessage - Default message if error is not an instance of Error
-   * @returns Error response object
-   */
-  private static handleError(error: unknown, defaultMessage: string): RouteLoginResponse {
-    // Get error message
-    const errorMessage = error instanceof Error ? error.message : defaultMessage;
 
-    // Only log unexpected errors or validation errors
-    if (error instanceof ZodError) {
-      // For validation errors, format them nicely but still log
-      console.warn('Validation error:', error.format());
-    } else if (error instanceof Error && !EXPECTED_ERROR_MESSAGES.includes(error.message)) {
-      // Log unexpected errors with stack trace
-      console.error(`Unexpected error: ${errorMessage}`, error.stack);
-    }
-
-    // Return consistent error response to client
-    return { error: errorMessage };
-  }
 }

@@ -114,7 +114,7 @@ describe('Auth Routes (E2E)', () => {
       // Assert
       expect(res.status).toBe(200)
       const body = await res.json()
-      expect(body).toEqual({ token: mockToken })
+      expect(body).toEqual({ token: mockToken, emailVerificationNeeded: false })
       expect(AuthService.register).toHaveBeenCalledWith(
         requestBody.email,
         requestBody.password,
@@ -144,7 +144,7 @@ describe('Auth Routes (E2E)', () => {
       // Assert
       expect(res.status).toBe(200)
       const body = await res.json()
-      expect(body).toEqual({ token: mockToken })
+      expect(body).toEqual({ token: mockToken, emailVerificationNeeded: false })
       expect(AuthService.register).toHaveBeenCalledWith(
         requestBody.email,
         requestBody.password,
