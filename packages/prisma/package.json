@@ -12,7 +12,8 @@
     "db:studio": "prisma studio",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "prisma": "prisma"
   },
   "dependencies": {
     "@prisma/client": "^6.4.1"

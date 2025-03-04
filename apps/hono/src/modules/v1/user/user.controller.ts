@@ -22,7 +22,8 @@ export class UserController {
     return {
       id: user.id,
       email: user.email,
-      name: user.name || user.email.split('@')[0] // Fallback if name not set
+      name: user.name || user.email.split('@')[0], // Fallback if name not set
+      role: user.role
     }
   }
 
@@ -38,7 +39,8 @@ export class UserController {
     return {
       id: user.id,
       email: user.email,
-      name: user.name || user.email.split('@')[0] // Fallback if name not set
+      name: user.name || user.email.split('@')[0], // Fallback if name not set
+      role: user.role
     }
   }
 }

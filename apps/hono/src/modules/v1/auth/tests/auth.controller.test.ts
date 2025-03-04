@@ -2,10 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { AuthController } from '../auth.controller'
 import { AuthService } from '../auth.service'
 import { Context } from 'hono'
-import { ZodError } from 'zod'
-import { LoginRequestSchema, RegisterRequestSchema } from '../types'
 import { UserService } from '../../user/user.service'
-import { User } from '@packages/prisma'
+import { User, UserRole } from '@packages/prisma'
 
 // Mock the UserService
 vi.mock('../../user/user.service', () => ({
@@ -211,7 +209,8 @@ describe('AuthController', () => {
         name: 'Test User',
         password: 'password123',
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        role: UserRole.USER
       }
 
       // Fixed function signature to match Hono's Context.req.query
@@ -309,7 +308,8 @@ describe('AuthController', () => {
         name: 'Test User',
         password: 'password123',
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        role: UserRole.USER
       }
       // Setup mocks
       mockContext.req.query = vi.fn() as unknown as {

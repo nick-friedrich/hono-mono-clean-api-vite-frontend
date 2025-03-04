@@ -3,6 +3,7 @@ import app from '../../../../index'
 import { UserController } from '../user.controller'
 import { UserService } from '../user.service'
 import * as jwtUtils from '../../../../utils/jwt'
+import { UserRole } from '@packages/prisma'
 
 // Mock the UserController
 vi.mock('../user.controller', () => ({
@@ -24,7 +25,8 @@ describe('User Routes (E2E)', () => {
       const mockUserResponse = {
         id: userId,
         email: 'test@example.com',
-        name: 'Test User'
+        name: 'Test User',
+        role: UserRole.USER
       }
 
       vi.mocked(UserController.handleGetUser).mockResolvedValue(mockUserResponse)
@@ -86,14 +88,16 @@ describe('User Routes (E2E)', () => {
       const mockUserResponse = {
         id: 'user-123',
         email: 'test@example.com',
-        name: 'Test User'
+        name: 'Test User',
+        role: UserRole.USER
       }
 
       const mockUserDates = {
         createdAt: new Date(),
         updatedAt: new Date(),
         emailVerifiedAt: new Date(),
-        emailVerificationTokenExpiresAt: null
+        emailVerificationTokenExpiresAt: null,
+        role: UserRole.USER
       };
 
       // Mock user data
@@ -136,14 +140,16 @@ describe('User Routes (E2E)', () => {
       const mockUserResponse = {
         id: 'user-123',
         email: 'test@example.com',
-        name: 'Test User'
+        name: 'Test User',
+        role: UserRole.USER
       }
 
       const mockUserDates = {
         createdAt: new Date(),
         updatedAt: new Date(),
         emailVerifiedAt: new Date(),
-        emailVerificationTokenExpiresAt: null
+        emailVerificationTokenExpiresAt: null,
+        role: UserRole.USER
       };
 
       // Mock user data

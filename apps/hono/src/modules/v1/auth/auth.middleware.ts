@@ -1,12 +1,13 @@
 import { Context, Next } from 'hono';
-import { HTTPException } from 'hono/http-exception';
 import { UserService } from '../user/user.service';
 import { verifyJWT } from '../../../utils/jwt';
+import { UserRole } from '@packages/prisma';
 
 export interface AuthUser {
   id: string;
   email: string;
   name?: string;
+  role: UserRole;
 }
 
 declare module 'hono' {
@@ -41,3 +42,4 @@ export const authMiddleware = async (c: Context, next: Next) => {
     return c.json({ message: 'Unauthorized: Invalid token' }, 401);
   }
 };
+

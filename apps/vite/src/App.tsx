@@ -12,9 +12,15 @@ import "./App.css";
 
 const API_URL = "http://localhost:3000";
 
+enum UserRole {
+  USER = "USER",
+  ADMIN = "ADMIN",
+}
+
 interface User {
   email: string;
   name?: string;
+  role?: UserRole;
 }
 
 async function fetchClientSide<T>(
@@ -56,7 +62,10 @@ function App() {
   // Fetch current user
   useEffect(() => {
     fetchClientSide<RouteUserCurrentResponse>("/api/v1/user/current")
-      .then((data) => setUser(data))
+      .then((data) => {
+        console.log(data);
+        setUser({ ...data, role: data.role as UserRole });
+      })
       .catch(console.error);
   }, []);
 
@@ -373,7 +382,7 @@ function App() {
               Welcome, {user?.name || user?.email || "User"}!
             </h2>
             <p className="mt-2 text-gray-600">
-              You are logged in with {user?.email}
+              You are logged in with {user?.email} as {user?.role}
             </p>
             <button
               onClick={handleLogout}

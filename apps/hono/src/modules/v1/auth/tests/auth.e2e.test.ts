@@ -3,6 +3,7 @@ import app from '../../../../index'
 import { AuthService } from '../auth.service'
 import { UserService } from '../../user/user.service'
 import * as jwtUtils from '../../../../utils/jwt'
+import { UserRole } from '@packages/prisma'
 
 // Mock dependencies
 vi.mock('../auth.service')
@@ -264,6 +265,7 @@ describe('Auth Routes (E2E)', () => {
         name: 'Test User',
         password: 'hashed_password',
         emailVerificationToken: null,
+        role: UserRole.USER,
         ...mockUserDates
       };
 

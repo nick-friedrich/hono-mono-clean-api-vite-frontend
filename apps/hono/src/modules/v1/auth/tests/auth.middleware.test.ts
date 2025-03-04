@@ -3,6 +3,7 @@ import { authMiddleware } from "../auth.middleware"
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { UserService } from "../../user/user.service"
 import * as jwtUtils from "../../../../utils/jwt"
+import { UserRole } from "@packages/prisma"
 
 // Setup mocks before tests
 vi.mock("../../user/user.service")
@@ -53,7 +54,8 @@ describe('AuthMiddleware', () => {
       updatedAt: new Date(),
       emailVerificationToken: null,
       emailVerificationTokenExpiresAt: null,
-      emailVerifiedAt: new Date()
+      emailVerifiedAt: new Date(),
+      role: UserRole.USER
     }
     const mockJwtPayload = { sub: '123', email: 'test@example.com', name: 'Test User' }
 
@@ -75,7 +77,8 @@ describe('AuthMiddleware', () => {
     expect(await res.json()).toMatchObject({
       id: mockUser.id,
       email: mockUser.email,
-      name: mockUser.name
+      name: mockUser.name,
+      role: mockUser.role
     })
   })
 

@@ -93,7 +93,8 @@ auth.get('/current', authMiddleware, async (c) => {
   return c.json({
     id: user.id,
     email: user.email,
-    name: user.name
+    name: user.name,
+    role: user.role
   });
 });
 

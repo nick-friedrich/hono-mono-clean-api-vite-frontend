@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Context } from 'hono'
 import { UserController } from '../user.controller'
 import { UserService } from '../user.service'
+import { UserRole } from '@packages/prisma'
 
 // Mock the UserService
 vi.mock('../user.service', () => ({
@@ -24,7 +25,8 @@ describe('UserController', () => {
       get: vi.fn().mockReturnValue({
         id: 'user-123',
         email: 'test@example.com',
-        name: 'Test User'
+        name: 'Test User',
+        role: UserRole.USER
       })
     } as unknown as Context
   })
@@ -41,7 +43,8 @@ describe('UserController', () => {
         updatedAt: new Date(),
         emailVerificationToken: null,
         emailVerificationTokenExpiresAt: null,
-        emailVerifiedAt: new Date()
+        emailVerifiedAt: new Date(),
+        role: UserRole.USER
       }
 
       vi.mocked(UserService.getUserById).mockResolvedValue(mockUser)
@@ -55,7 +58,8 @@ describe('UserController', () => {
       expect(result).toEqual({
         id: 'user-123',
         email: 'test@example.com',
-        name: 'Test User'
+        name: 'Test User',
+        role: UserRole.USER
       })
     })
 
@@ -67,7 +71,11 @@ describe('UserController', () => {
         name: undefined, // Name not set
         password: 'hashed-password',
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        emailVerificationToken: null,
+        emailVerificationTokenExpiresAt: null,
+        emailVerifiedAt: new Date(),
+        role: UserRole.USER
       }
 
       vi.mocked(UserService.getUserById).mockResolvedValue(mockUser as any)
@@ -79,7 +87,8 @@ describe('UserController', () => {
       expect(result).toEqual({
         id: 'user-123',
         email: 'test@example.com',
-        name: 'test' // Email prefix
+        name: 'test', // Email prefix
+        role: UserRole.USER
       })
     })
 
@@ -106,7 +115,8 @@ describe('UserController', () => {
         updatedAt: new Date(),
         emailVerificationToken: null,
         emailVerificationTokenExpiresAt: null,
-        emailVerifiedAt: new Date()
+        emailVerifiedAt: new Date(),
+        role: UserRole.USER
       }
 
       vi.mocked(UserService.getUserById).mockResolvedValue(mockUser)
@@ -118,7 +128,8 @@ describe('UserController', () => {
       expect(result).toEqual({
         id: 'user-123',
         email: 'test@example.com',
-        name: 'Test User'
+        name: 'Test User',
+        role: UserRole.USER
       })
     })
 
