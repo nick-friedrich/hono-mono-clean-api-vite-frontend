@@ -8,10 +8,17 @@ Frontend is built with Vite and React.
 
 I tried to keep the code as clean as possible and easy to understand.
 
+For a real application, i would swap out the frontend for a more robust framework like ReactRouter V7 or NextJS. But for demonstration purposes, this is a good starting point.
+
 ### Features
 
 - [x] Authentication
 - [x] Email Verification
+
+### Images
+
+![Login](./user-login.png)
+![Signup](./user-dashboard.png)
 
 #### Run tests
 
