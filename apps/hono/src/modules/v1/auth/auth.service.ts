@@ -1,7 +1,8 @@
 import { UserService } from "../user/user.service";
-import { generateRandomPassword, hashPassword, verifyPassword } from "../../../utils/password";
+import { hashPassword, verifyPassword } from "../../../utils/password";
 import { generateJWT } from "../../../utils/jwt";
-import { db, User } from "@packages/prisma";
+import { User } from "@packages/prisma";
+import { getMailService } from "../../../utils/email/email";
 
 /**
  * Auth service
@@ -90,6 +91,14 @@ export class AuthService {
 
     if (AuthService.EMAIL_VERIFICATION_NEEDED) {
       // TODO: Send verification email
+      console.log(`Email verification needed for user ${user.email}`)
+      const mailService = getMailService()
+      // TODO: Mail Templates
+      mailService.sendEmail({
+        to: user.email,
+        subject: "Verify your email",
+        text: `Please verify your email by clicking here: ${process.env.BACKEND_URL}/api/v1/auth/verify-email?token=${user.emailVerificationToken}`
+      })
       return {
         token: undefined,
         emailVerificationNeeded: true

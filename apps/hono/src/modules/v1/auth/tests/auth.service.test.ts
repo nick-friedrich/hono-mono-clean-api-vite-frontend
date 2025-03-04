@@ -4,6 +4,7 @@ import { UserService } from '../../user/user.service'
 import * as passwordUtils from '../../../../utils/password'
 import * as jwtUtils from '../../../../utils/jwt'
 import { User } from '@packages/prisma'
+import { ConsoleMailAdapter, getMailService } from '../../../../utils/email/email'
 
 // Mock dependencies
 vi.mock('../../user/user.service', () => ({
@@ -27,6 +28,9 @@ vi.mock('../../../../utils/jwt', () => ({
 vi.mock('crypto', () => ({
   randomUUID: vi.fn().mockReturnValue('mock-uuid')
 }))
+
+// Add this with your other console mocks at the beginning of your test file
+vi.spyOn(console, 'log').mockImplementation(() => { })
 
 describe('AuthService', () => {
   const mockUser: User = {
@@ -54,6 +58,7 @@ describe('AuthService', () => {
   const mockToken = 'mock-jwt-token'
 
   beforeEach(() => {
+    // Reset all mocks
     vi.clearAllMocks()
 
     // Mock current date
@@ -237,12 +242,16 @@ describe('AuthService', () => {
       expect(UserService.createUser).not.toHaveBeenCalled()
     })
 
-    it('should return undefined token when email verification is needed', async () => {
+    it('should return undefined token and send mail when email verification is needed', async () => {
       // Arrange
       const email = 'newuser@example.com'
       const password = 'password123'
 
       AuthService.EMAIL_VERIFICATION_NEEDED = true
+
+      // Initialize mail service to use ConsoleMailAdapter
+      getMailService().initializeWith(new ConsoleMailAdapter())
+
       vi.mocked(UserService.getUserByEmail).mockResolvedValue(null)
       // Act
       const result = await AuthService.signUpWithEmailPassword(email, password)
@@ -256,6 +265,12 @@ describe('AuthService', () => {
         emailVerificationTokenExpiresAt: expect.any(Date),
         emailVerifiedAt: null
       }))
+      expect(console.log).toHaveBeenCalledWith(`Email verification needed for user ${email}`)
+      expect(console.log).toHaveBeenCalledWith({
+        to: email,
+        subject: 'Verify your email',
+        text: expect.any(String)
+      })
       expect(result).toEqual({ token: undefined, emailVerificationNeeded: true })
     })
 
