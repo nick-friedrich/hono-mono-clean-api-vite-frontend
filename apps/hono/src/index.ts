@@ -2,8 +2,8 @@ import { Hono } from 'hono'
 import health from './modules/v1/health'
 import auth from './modules/v1/auth'
 import user from './modules/v1/user'
-import { getMailService } from './utils/email'
-import { ConsoleMailAdapter } from './utils/email'
+import { getMailService } from './utils/email/email'
+import { ConsoleMailAdapter } from './utils/email/email'
 
 const app = new Hono()
 const api = app.basePath('/api')

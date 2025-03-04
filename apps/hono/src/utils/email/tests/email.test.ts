@@ -1,6 +1,6 @@
 import { expect, describe, it, vi, beforeEach, afterEach } from "vitest"
-import { ConsoleMailAdapter, MailServiceInstance } from ".."
-import { getMailService } from '../index'
+import { ConsoleMailAdapter, MailServiceInstance } from "../email"
+import { getMailService } from '../email'
 
 describe('MailServiceInstance', () => {
   it('should be a singleton', () => {
