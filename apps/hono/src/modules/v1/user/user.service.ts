@@ -39,9 +39,20 @@ export class UserService {
    * @param user - User
    * @returns User
    */
-  static async createUser(user: User) {
+  static async createUser(user: Partial<User>) {
+    if (!user.email) {
+      throw new Error("Email is required")
+    }
+
+    if (!user.name) {
+      user.name = user.email.split("@")[0]
+    }
     const newUser = await db.user.create({
-      data: user,
+      data: {
+        ...user,
+        email: user.email,
+        name: user.name,
+      },
     })
     return newUser
   }

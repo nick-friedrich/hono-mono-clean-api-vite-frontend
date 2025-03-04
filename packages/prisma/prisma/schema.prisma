@@ -16,8 +16,13 @@ datasource db {
 model User {
   id        String   @id @default(uuid())
   email     String   @unique
-  password  String
+  password  String?
   name      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Email verification
+  emailVerificationToken String?
+  emailVerificationTokenExpiresAt DateTime?
+  emailVerifiedAt DateTime?
 }

@@ -35,7 +35,20 @@ describe('AuthService', () => {
     password: 'hashed-password',
     name: 'Test User',
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
+    emailVerificationToken: null,
+    emailVerificationTokenExpiresAt: null,
+    emailVerifiedAt: new Date(),
+  }
+
+  const mockUserNotVerified: User = {
+    ...mockUser,
+    emailVerifiedAt: null
+  }
+
+  const mockUserNoPassword: User = {
+    ...mockUser,
+    password: null
   }
 
   const mockToken = 'mock-jwt-token'
@@ -63,7 +76,7 @@ describe('AuthService', () => {
       vi.mocked(jwtUtils.generateJWT).mockResolvedValue(mockToken)
 
       // Act
-      const result = await AuthService.login(email, password)
+      const result = await AuthService.loginWithEmailPassword(email, password)
 
       // Assert
       expect(UserService.getUserByEmail).toHaveBeenCalledWith(email)
@@ -83,7 +96,7 @@ describe('AuthService', () => {
       vi.mocked(UserService.getUserByEmail).mockResolvedValue(null)
 
       // Act & Assert
-      await expect(AuthService.login(email, password)).rejects.toThrow('Invalid email or password')
+      await expect(AuthService.loginWithEmailPassword(email, password)).rejects.toThrow('Invalid email or password')
       expect(UserService.getUserByEmail).toHaveBeenCalledWith(email)
       expect(passwordUtils.verifyPassword).not.toHaveBeenCalled()
     })
@@ -97,11 +110,46 @@ describe('AuthService', () => {
       vi.mocked(passwordUtils.verifyPassword).mockResolvedValue(false)
 
       // Act & Assert
-      await expect(AuthService.login(email, password)).rejects.toThrow('Invalid email or password')
+      await expect(AuthService.loginWithEmailPassword(email, password)).rejects.toThrow('Invalid email or password')
       expect(UserService.getUserByEmail).toHaveBeenCalledWith(email)
       expect(passwordUtils.verifyPassword).toHaveBeenCalledWith(password, mockUser.password)
       expect(jwtUtils.generateJWT).not.toHaveBeenCalled()
     })
+
+    it('should throw an error when email is not verified', async () => {
+      // Arrange
+      const email = 'test@example.com'
+      const password = 'password123'
+
+      AuthService.EMAIL_VERIFICATION_NEEDED = true
+
+      vi.mocked(UserService.getUserByEmail).mockResolvedValue(mockUserNotVerified)
+      vi.mocked(passwordUtils.verifyPassword).mockResolvedValue(true)
+      vi.mocked(jwtUtils.generateJWT).mockResolvedValue(mockToken)
+
+      // Act & Assert
+      await expect(AuthService.loginWithEmailPassword(email, password)).rejects.toThrow('Email not verified')
+      expect(UserService.getUserByEmail).toHaveBeenCalledWith(email)
+      expect(passwordUtils.verifyPassword).not.toHaveBeenCalled()
+      expect(jwtUtils.generateJWT).not.toHaveBeenCalled()
+    })
+
+    it('should throw an error when no password is set', async () => {
+      // Arrange
+      const email = 'test@example.com'
+      const password = 'password123'
+
+      vi.mocked(UserService.getUserByEmail).mockResolvedValue(mockUserNoPassword)
+      vi.mocked(passwordUtils.verifyPassword).mockResolvedValue(true)
+      vi.mocked(jwtUtils.generateJWT).mockResolvedValue(mockToken)
+
+      // Act & Assert
+      await expect(AuthService.loginWithEmailPassword(email, password)).rejects.toThrow('Invalid email or password')
+      expect(UserService.getUserByEmail).toHaveBeenCalledWith(email)
+      expect(passwordUtils.verifyPassword).not.toHaveBeenCalled()
+      expect(jwtUtils.generateJWT).not.toHaveBeenCalled()
+    })
+
   })
 
   describe('register', () => {
@@ -124,7 +172,7 @@ describe('AuthService', () => {
       vi.mocked(jwtUtils.generateJWT).mockResolvedValue(mockToken)
 
       // Act
-      const result = await AuthService.register(email, password, name)
+      const result = await AuthService.signUpWithEmailPassword(email, password, name)
 
       // Assert
       expect(UserService.getUserByEmail).toHaveBeenCalledWith(email)
@@ -160,7 +208,7 @@ describe('AuthService', () => {
       vi.mocked(jwtUtils.generateJWT).mockResolvedValue(mockToken)
 
       // Act
-      const result = await AuthService.register(email, password)
+      const result = await AuthService.signUpWithEmailPassword(email, password)
 
       // Assert
       expect(UserService.createUser).toHaveBeenCalledWith(expect.objectContaining({
@@ -181,7 +229,7 @@ describe('AuthService', () => {
       vi.mocked(UserService.getUserByEmail).mockResolvedValue(mockUser)
 
       // Act & Assert
-      await expect(AuthService.register(email, password)).rejects.toThrow('User already exists')
+      await expect(AuthService.signUpWithEmailPassword(email, password)).rejects.toThrow('User already exists')
       expect(UserService.getUserByEmail).toHaveBeenCalledWith(email)
       expect(passwordUtils.hashPassword).not.toHaveBeenCalled()
       expect(UserService.createUser).not.toHaveBeenCalled()

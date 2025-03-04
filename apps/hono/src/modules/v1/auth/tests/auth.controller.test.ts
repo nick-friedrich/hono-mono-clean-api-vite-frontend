@@ -2,13 +2,23 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { AuthController } from '../auth.controller'
 import { AuthService } from '../auth.service'
 import { Context } from 'hono'
+import { ZodError } from 'zod'
 import { LoginRequestSchema, RegisterRequestSchema } from '../types'
+import { UserService } from '../../user/user.service'
+import { User } from '@packages/prisma'
+
+// Mock the UserService
+vi.mock('../../user/user.service', () => ({
+  UserService: {
+    getUserByEmail: vi.fn()
+  }
+}))
 
 // Mock the AuthService
 vi.mock('../auth.service', () => ({
   AuthService: {
-    login: vi.fn(),
-    register: vi.fn()
+    loginWithEmailPassword: vi.fn(),
+    signUpWithEmailPassword: vi.fn()
   }
 }))
 
@@ -40,14 +50,14 @@ describe('AuthController', () => {
 
       // Setup mocks
       mockContext.req.json = vi.fn().mockResolvedValue({ email, password })
-      vi.mocked(AuthService.login).mockResolvedValue(mockToken)
+      vi.mocked(AuthService.loginWithEmailPassword).mockResolvedValue(mockToken)
 
       // Act
       const result = await AuthController.handleLogin(mockContext)
 
       // Assert
       expect(mockContext.req.json).toHaveBeenCalledTimes(1)
-      expect(AuthService.login).toHaveBeenCalledWith(email, password)
+      expect(AuthService.loginWithEmailPassword).toHaveBeenCalledWith(email, password)
       expect(result).toEqual({ token: mockToken })
     })
 
@@ -55,40 +65,43 @@ describe('AuthController', () => {
       // Arrange
       const email = 'test@example.com'
       const password = 'wrong-password'
+      const errorMessage = 'Invalid email or password'
 
       // Setup mocks
       mockContext.req.json = vi.fn().mockResolvedValue({ email, password })
-      vi.mocked(AuthService.login).mockRejectedValue(new Error('Invalid email or password'))
+      vi.mocked(AuthService.loginWithEmailPassword).mockRejectedValue(new Error(errorMessage))
 
       // Act
       const result = await AuthController.handleLogin(mockContext)
 
       // Assert
       expect(mockContext.req.json).toHaveBeenCalledTimes(1)
-      expect(AuthService.login).toHaveBeenCalledWith(email, password)
-      expect(result).toEqual({ error: "Invalid email or password" })
+      expect(AuthService.loginWithEmailPassword).toHaveBeenCalledWith(email, password)
+      expect(result).toEqual({ error: errorMessage })
     })
 
-    it('should return an error when request validation fails', async () => {
+    it('should return an error when login fails due to email not verified', async () => {
       // Arrange
-      mockContext.req.json = vi.fn().mockResolvedValue({
-        email: 'invalid-email',
-        password: 'short'
-      })
+      const email = 'test@example.com'
+      const password = 'password123'
+      const errorMessage = 'Email not verified'
 
-      // Directly mock the schema parse function
-      const parseOriginal = LoginRequestSchema.parse;
-      LoginRequestSchema.parse = vi.fn().mockImplementation(() => {
-        throw new Error('Validation error');
-      });
+      // Setup mocks
+      mockContext.req.json = vi.fn().mockResolvedValue({ email, password })
+
+      // Need to mock AuthService to throw the appropriate error
+      vi.mocked(AuthService.loginWithEmailPassword).mockRejectedValue(new Error(errorMessage))
+
+      // Note: We don't need to mock UserService.getUserByEmail here since the controller
+      // doesn't directly use it - that would be part of the AuthService's implementation
 
       // Act
       const result = await AuthController.handleLogin(mockContext)
 
       // Assert
-      expect(result).toEqual({ error: 'Validation error' })
-      // Restore original
-      LoginRequestSchema.parse = parseOriginal;
+      expect(mockContext.req.json).toHaveBeenCalledTimes(1)
+      expect(AuthService.loginWithEmailPassword).toHaveBeenCalledWith(email, password)
+      expect(result).toEqual({ error: errorMessage })
     })
   })
 
@@ -102,14 +115,14 @@ describe('AuthController', () => {
 
       // Setup mocks
       mockContext.req.json = vi.fn().mockResolvedValue({ email, password, name })
-      vi.mocked(AuthService.register).mockResolvedValue(mockToken)
+      vi.mocked(AuthService.signUpWithEmailPassword).mockResolvedValue(mockToken)
 
       // Act
       const result = await AuthController.handleRegister(mockContext)
 
       // Assert
       expect(mockContext.req.json).toHaveBeenCalledTimes(1)
-      expect(AuthService.register).toHaveBeenCalledWith(email, password, name)
+      expect(AuthService.signUpWithEmailPassword).toHaveBeenCalledWith(email, password, name)
       expect(result).toEqual({ token: mockToken, emailVerificationNeeded: false })
     })
 
@@ -118,41 +131,20 @@ describe('AuthController', () => {
       const email = 'existing@example.com'
       const password = 'password123'
       const name = 'Existing User'
+      const errorMessage = 'User already exists'
 
       // Setup mocks
       mockContext.req.json = vi.fn().mockResolvedValue({ email, password, name })
-      vi.mocked(AuthService.register).mockRejectedValue(new Error('User already exists'))
+      vi.mocked(AuthService.signUpWithEmailPassword).mockRejectedValue(new Error(errorMessage))
 
       // Act
       const result = await AuthController.handleRegister(mockContext)
 
       // Assert
       expect(mockContext.req.json).toHaveBeenCalledTimes(1)
-      expect(AuthService.register).toHaveBeenCalledWith(email, password, name)
-      expect(result).toEqual({ error: "User already exists" })
+      expect(AuthService.signUpWithEmailPassword).toHaveBeenCalledWith(email, password, name)
+      expect(result).toEqual({ error: errorMessage })
     })
 
-    it('should return an error when request validation fails', async () => {
-      // Arrange
-      mockContext.req.json = vi.fn().mockResolvedValue({
-        email: 'invalid-email',
-        password: 'short'
-      })
-
-      // Directly mock the schema parse function
-      const parseOriginal = RegisterRequestSchema.parse;
-      RegisterRequestSchema.parse = vi.fn().mockImplementation(() => {
-        throw new Error('Validation error');
-      });
-
-      // Act
-      const result = await AuthController.handleRegister(mockContext)
-
-      // Assert
-      expect(result).toEqual({ error: "Validation error" })
-
-      // Restore original
-      RegisterRequestSchema.parse = parseOriginal;
-    })
   })
 }) 

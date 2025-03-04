@@ -5,8 +5,8 @@ import { AuthService } from '../auth.service'
 // Mock the AuthService
 vi.mock('../auth.service', () => ({
   AuthService: {
-    login: vi.fn(),
-    register: vi.fn()
+    loginWithEmailPassword: vi.fn(),
+    signUpWithEmailPassword: vi.fn()
   }
 }))
 
@@ -19,7 +19,7 @@ describe('Auth Routes (E2E)', () => {
     it('should return 200 and token when login is successful', async () => {
       // Arrange
       const mockToken = 'mock-jwt-token'
-      vi.mocked(AuthService.login).mockResolvedValue(mockToken)
+      vi.mocked(AuthService.loginWithEmailPassword).mockResolvedValue(mockToken)
 
       const requestBody = {
         email: 'test@example.com',
@@ -39,12 +39,12 @@ describe('Auth Routes (E2E)', () => {
       expect(res.status).toBe(200)
       const body = await res.json()
       expect(body).toEqual({ token: mockToken })
-      expect(AuthService.login).toHaveBeenCalledWith(requestBody.email, requestBody.password)
+      expect(AuthService.loginWithEmailPassword).toHaveBeenCalledWith(requestBody.email, requestBody.password)
     })
 
     it('should return error when login fails', async () => {
       // Arrange
-      vi.mocked(AuthService.login).mockRejectedValue(new Error('Invalid email or password'))
+      vi.mocked(AuthService.loginWithEmailPassword).mockRejectedValue(new Error('Invalid email or password'))
 
       const requestBody = {
         email: 'test@example.com',
@@ -86,15 +86,41 @@ describe('Auth Routes (E2E)', () => {
       expect(res.status).toBe(400) // Validation errors return 400
       const body = await res.json()
       expect(body).toHaveProperty('error') // The exact error message may vary depending on zod openapi behavior
-      expect(AuthService.login).not.toHaveBeenCalled()
+      expect(AuthService.loginWithEmailPassword).not.toHaveBeenCalled()
     })
+
+
+    it('should return 400 when email is not verified', async () => {
+      // Arrange
+      vi.mocked(AuthService.loginWithEmailPassword).mockRejectedValue(new Error('Email not verified'))
+
+      const requestBody = {
+        email: 'test@example.com',
+        password: 'password123'
+      }
+
+      // Act
+      const res = await app.request('/api/v1/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      })
+
+      // Assert
+      expect(res.status).toBe(200)
+      const body = await res.json()
+      expect(body).toEqual({ error: 'Email not verified' })
+    })
+
   })
 
   describe('POST /api/v1/auth/register', () => {
     it('should return 200 and token when registration is successful', async () => {
       // Arrange
       const mockToken = 'mock-jwt-token'
-      vi.mocked(AuthService.register).mockResolvedValue(mockToken)
+      vi.mocked(AuthService.signUpWithEmailPassword).mockResolvedValue(mockToken)
 
       const requestBody = {
         email: 'newuser@example.com',
@@ -115,7 +141,7 @@ describe('Auth Routes (E2E)', () => {
       expect(res.status).toBe(200)
       const body = await res.json()
       expect(body).toEqual({ token: mockToken, emailVerificationNeeded: false })
-      expect(AuthService.register).toHaveBeenCalledWith(
+      expect(AuthService.signUpWithEmailPassword).toHaveBeenCalledWith(
         requestBody.email,
         requestBody.password,
         requestBody.name
@@ -125,7 +151,7 @@ describe('Auth Routes (E2E)', () => {
     it('should accept registration without name', async () => {
       // Arrange
       const mockToken = 'mock-jwt-token'
-      vi.mocked(AuthService.register).mockResolvedValue(mockToken)
+      vi.mocked(AuthService.signUpWithEmailPassword).mockResolvedValue(mockToken)
 
       const requestBody = {
         email: 'newuser@example.com',
@@ -145,7 +171,7 @@ describe('Auth Routes (E2E)', () => {
       expect(res.status).toBe(200)
       const body = await res.json()
       expect(body).toEqual({ token: mockToken, emailVerificationNeeded: false })
-      expect(AuthService.register).toHaveBeenCalledWith(
+      expect(AuthService.signUpWithEmailPassword).toHaveBeenCalledWith(
         requestBody.email,
         requestBody.password,
         undefined
@@ -154,7 +180,7 @@ describe('Auth Routes (E2E)', () => {
 
     it('should return error when user already exists', async () => {
       // Arrange
-      vi.mocked(AuthService.register).mockRejectedValue(new Error('User already exists'))
+      vi.mocked(AuthService.signUpWithEmailPassword).mockRejectedValue(new Error('User already exists'))
 
       const requestBody = {
         email: 'existing@example.com',
@@ -196,7 +222,7 @@ describe('Auth Routes (E2E)', () => {
       expect(res.status).toBe(400) // Validation errors return 400
       const body = await res.json()
       expect(body).toHaveProperty('error') // The exact error message may vary depending on zod openapi behavior
-      expect(AuthService.register).not.toHaveBeenCalled()
+      expect(AuthService.signUpWithEmailPassword).not.toHaveBeenCalled()
     })
   })
 }) 

@@ -12,15 +12,28 @@ import { db } from "@packages/prisma";
 export class AuthService {
 
   /**
+   * Email verification needed
+   */
+  static EMAIL_VERIFICATION_NEEDED = process.env.EMAIL_VERIFICATION_NEEDED ? process.env.EMAIL_VERIFICATION_NEEDED === "true" : false;
+
+  /**
    * Login
    * @param email - User email
    * @param password - User password
    * @returns Token
    * @throws Error if user not found or password is incorrect
    */
-  static async login(email: string, password: string): Promise<string> {
+  static async loginWithEmailPassword(email: string, password: string): Promise<string> {
     const user = await UserService.getUserByEmail(email)
     if (!user) {
+      throw new Error("Invalid email or password")
+    }
+
+    if (AuthService.EMAIL_VERIFICATION_NEEDED && !user.emailVerifiedAt) {
+      throw new Error("Email not verified")
+    }
+
+    if (!user.password) {
       throw new Error("Invalid email or password")
     }
 
@@ -46,7 +59,7 @@ export class AuthService {
    * @returns Token
    * @throws Error if user already exists
    */
-  static async register(email: string, password: string, name?: string): Promise<string> {
+  static async signUpWithEmailPassword(email: string, password: string, name?: string): Promise<string> {
     // Check if user already exists
     const existingUser = await UserService.getUserByEmail(email)
     if (existingUser) {

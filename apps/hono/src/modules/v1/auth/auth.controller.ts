@@ -23,7 +23,7 @@ export class AuthController {
       const { email, password } = LoginRequestSchema.parse(body)
 
       // Authenticate user
-      const token = await AuthService.login(email, password)
+      const token = await AuthService.loginWithEmailPassword(email, password)
 
       return { token }
     } catch (error) {
@@ -46,7 +46,7 @@ export class AuthController {
       const { email, password, name } = RegisterRequestSchema.parse(body)
 
       // Register user
-      const token = await AuthService.register(email, password, name)
+      const token = await AuthService.signUpWithEmailPassword(email, password, name)
 
       return { token, emailVerificationNeeded: false }
     } catch (error) {
