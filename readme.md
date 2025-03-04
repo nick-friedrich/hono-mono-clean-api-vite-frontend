@@ -14,6 +14,7 @@ For a real application, i would swap out the frontend for a more robust framewor
 
 - [x] Authentication
 - [x] Email Verification
+- [x] Mail Service (Interface with adapter pattern, for now just console.log)
 
 ### Images
 
