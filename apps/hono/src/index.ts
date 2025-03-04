@@ -4,8 +4,15 @@ import auth from './modules/v1/auth'
 import user from './modules/v1/user'
 import { getMailService } from './utils/email/email'
 import { ConsoleMailAdapter } from './utils/email/email'
+import { logger } from 'hono/logger'
+import { cors } from 'hono/cors'
 
 const app = new Hono()
+
+// Middlewares
+app.use('*', logger())
+app.use('*', cors())
+
 const api = app.basePath('/api')
 const v1 = api.basePath('/v1')
 
