@@ -11,11 +11,6 @@ I tried to keep the code as clean as possible and easy to understand.
 
 For a real application, i would swap out the frontend for a more robust framework like ReactRouter V7 or NextJS. But for demonstration purposes, this is a good starting point.
 
-### Currently Missing
-
-- [ ] Authorization
-- [ ] Backend Route to get the current loggedin user
-
 ### Features
 
 - [x] Authentication
