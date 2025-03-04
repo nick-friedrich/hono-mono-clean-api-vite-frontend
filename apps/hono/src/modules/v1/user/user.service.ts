@@ -43,8 +43,7 @@ export class UserService {
     if (!user.email) {
       throw new Error("Email is required")
     }
-
-    if (!user.name) {
+    if (!user.name || user.name === "") {
       user.name = user.email.split("@")[0]
     }
     const newUser = await db.user.create({

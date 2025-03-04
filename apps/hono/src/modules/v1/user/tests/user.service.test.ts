@@ -25,8 +25,34 @@ describe('UserService', () => {
     name: 'Test User',
     password: 'hashed-password',
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
+    emailVerificationToken: null,
+    emailVerificationTokenExpiresAt: null,
+    emailVerifiedAt: new Date()
   }
+
+  const mockUserNoName: User = {
+    ...mockUser,
+    name: ''
+  }
+
+  const mockUserNoEmail: User = {
+    ...mockUser,
+    email: ''
+  }
+
+  const mockUserNoPassword: User = {
+    ...mockUser,
+    password: ''
+  }
+
+  const mockUserNoEmailVerificationToken: User = {
+    ...mockUser,
+    emailVerificationToken: null
+  }
+
+
+
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -101,7 +127,10 @@ describe('UserService', () => {
         name: 'New User',
         password: 'hashed-password',
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        emailVerificationToken: null,
+        emailVerificationTokenExpiresAt: null,
+        emailVerifiedAt: null
       }
 
       vi.mocked(db.user.create).mockResolvedValue(newUser)
@@ -114,6 +143,18 @@ describe('UserService', () => {
         data: newUser
       })
       expect(result).toEqual(newUser)
+    })
+
+    it('should throw an error when email is not provided', async () => {
+      // Act & Assert
+      await expect(UserService.createUser(mockUserNoEmail)).rejects.toThrow('Email is required')
+    })
+
+    it('should use the email part before the @ as the name if no name is provided', async () => {
+      // Act
+      const result = await UserService.createUser(mockUserNoName)
+      // Assert
+      expect(result.name).toEqual('New User')
     })
   })
 }) 
