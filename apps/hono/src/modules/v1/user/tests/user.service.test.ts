@@ -8,7 +8,9 @@ vi.mock('@packages/prisma', () => {
     db: {
       user: {
         findUnique: vi.fn(),
-        create: vi.fn()
+        findFirst: vi.fn(),
+        create: vi.fn(),
+        update: vi.fn()
       }
     },
     User: vi.fn()
@@ -58,6 +60,9 @@ describe('UserService', () => {
     vi.clearAllMocks()
   })
 
+  /**
+   * Get user by ID
+   */
   describe('getUserById', () => {
     it('should return a user when found by ID', async () => {
       // Arrange
@@ -88,6 +93,9 @@ describe('UserService', () => {
     })
   })
 
+  /**
+   * Get user by email
+   */
   describe('getUserByEmail', () => {
     it('should return a user when found by email', async () => {
       // Arrange
@@ -118,6 +126,38 @@ describe('UserService', () => {
     })
   })
 
+  /**
+   * Get user by verification token
+   */
+  describe('getUserByVerificationToken', () => {
+    it('should return a user when found by verification token', async () => {
+      // Arrange
+      vi.mocked(db.user.findFirst).mockResolvedValue(mockUser)
+
+      // Act
+      const result = await UserService.getUserByVerificationToken('token')
+
+      // Assert
+      expect(db.user.findFirst).toHaveBeenCalledWith({ where: { emailVerificationToken: 'token' } })
+      expect(result).toEqual(mockUser)
+    })
+
+    it('should return null when user is not found by verification token', async () => {
+      // Arrange
+      vi.mocked(db.user.findFirst).mockResolvedValue(null)
+
+      // Act
+      const result = await UserService.getUserByVerificationToken('token')
+
+      // Assert
+      expect(db.user.findFirst).toHaveBeenCalledWith({ where: { emailVerificationToken: 'token' } })
+      expect(result).toBeNull()
+    })
+  })
+
+  /**
+   * Create user
+   */
   describe('createUser', () => {
     it('should create and return a new user', async () => {
       // Arrange
@@ -157,4 +197,27 @@ describe('UserService', () => {
       expect(result.name).toEqual('New User')
     })
   })
+
+  /**
+   * Update user
+   */
+  describe('updateUser', () => {
+    it('should update a user', async () => {
+      // Arrange
+      const updatedUser: User = {
+        ...mockUser,
+        name: 'Updated User'
+      }
+
+      vi.mocked(db.user.update).mockResolvedValue(updatedUser)
+
+      // Act
+      const result = await UserService.updateUser(mockUser.id, updatedUser)
+
+      // Assert
+      expect(db.user.update).toHaveBeenCalledWith({ where: { id: mockUser.id }, data: updatedUser })
+      expect(result).toEqual(updatedUser)
+    })
+  })
+
 }) 

@@ -35,6 +35,18 @@ export class UserService {
   }
 
   /**
+   * Get user by verification token
+   * @param token - Verification token
+   * @returns User
+   */
+  static async getUserByVerificationToken(token: string) {
+    const user = await db.user.findFirst({
+      where: { emailVerificationToken: token },
+    })
+    return user
+  }
+
+  /**
    * Create user
    * @param user - User
    * @returns User
@@ -54,5 +66,19 @@ export class UserService {
       },
     })
     return newUser
+  }
+
+  /**
+   * Update user
+   * @param id - User id
+   * @param user - User
+   * @returns User
+   */
+  static async updateUser(id: string, user: Partial<User>) {
+    const updatedUser = await db.user.update({
+      where: { id },
+      data: user,
+    })
+    return updatedUser
   }
 }
