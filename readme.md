@@ -1,5 +1,11 @@
 # HONO - VITE - AUTH SAMPLE APP
 
+# Branch Overview
+
+- `main` - Under active development
+- `hono-vite-v1` - First version of the app with Hono and Vite
+- `hono-rrv7-v2` - Second version of the app with Hono and ReactRouter V7 (Coming soon)
+
 #### Description
 
 This is a sample app that demonstrates how to use Hono with Vite.
@@ -14,6 +20,8 @@ For a real application, i would swap out the frontend for a more robust framewor
 ### Features
 
 - [x] Authentication
+- [x] Authorization
+- [x] User roles
 - [x] Email Verification
 - [x] Mail Service (Interface with adapter pattern, for now just console.log)
 
