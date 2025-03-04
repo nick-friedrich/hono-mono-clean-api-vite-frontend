@@ -10,7 +10,9 @@ import { User } from '@packages/prisma'
 // Mock the UserService
 vi.mock('../../user/user.service', () => ({
   UserService: {
-    getUserByEmail: vi.fn()
+    getUserByEmail: vi.fn(),
+    getUserByVerificationToken: vi.fn(),
+    updateUser: vi.fn()
   }
 }))
 
@@ -18,7 +20,8 @@ vi.mock('../../user/user.service', () => ({
 vi.mock('../auth.service', () => ({
   AuthService: {
     loginWithEmailPassword: vi.fn(),
-    signUpWithEmailPassword: vi.fn()
+    signUpWithEmailPassword: vi.fn(),
+    verifyEmail: vi.fn()
   }
 }))
 
@@ -36,7 +39,8 @@ describe('AuthController', () => {
     // Create a mock context
     mockContext = {
       req: {
-        json: vi.fn()
+        json: vi.fn(),
+        query: vi.fn()
       }
     } as unknown as Context
   })
@@ -191,5 +195,147 @@ describe('AuthController', () => {
       expect(result).toEqual({ error: 'password: Password must be at least 8 characters' })
     })
 
+  })
+
+
+  describe('handleVerifyEmail', () => {
+    it('should return success when email is verified', async () => {
+      // Arrange
+      const token = 'valid-token'
+      const mockUser: User = {
+        id: 'user-123',
+        email: 'test@example.com',
+        emailVerifiedAt: null,
+        emailVerificationToken: token,
+        emailVerificationTokenExpiresAt: null,
+        name: 'Test User',
+        password: 'password123',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+
+      // Fixed function signature to match Hono's Context.req.query
+      mockContext.req.query = vi.fn() as unknown as {
+        (key: string): string | undefined;
+        (): Record<string, string>;
+      };
+
+      // Then implement the mock behavior
+      (mockContext.req.query as any).mockImplementation((param?: string) => {
+        if (param === 'token') return token;
+        if (!param) return {}; // Return empty record when called with no args
+        return undefined;
+      });
+
+      // Mock the user service methods
+      vi.mocked(UserService.getUserByVerificationToken).mockResolvedValue(mockUser)
+      vi.mocked(UserService.updateUser).mockResolvedValue(mockUser)
+
+      // Mock the AuthService.verifyEmail method which is actually called
+      vi.mocked(AuthService.verifyEmail).mockResolvedValue(true);
+
+      // Act
+      const result = await AuthController.handleVerifyEmail(mockContext)
+
+      // Assert
+      // Remove this expectation since req.json() isn't called
+      // expect(mockContext.req.json).toHaveBeenCalledTimes(1)
+
+      // Instead test that the query parameter was accessed
+      expect(mockContext.req.query).toHaveBeenCalledWith('token')
+
+      // And that the AuthService method was called with the token
+      expect(AuthService.verifyEmail).toHaveBeenCalledWith(token)
+
+      // The success response should be returned
+      expect(result).toEqual({ success: true })
+    })
+
+    it('should return error when token is not provided', async () => {
+      // Arrange
+      const token = ''
+      mockContext.req.query = vi.fn() as unknown as {
+        (key: string): string | undefined;
+        (): Record<string, string>;
+      };
+      // Act
+      const result = await AuthController.handleVerifyEmail(mockContext)
+
+      // Assert
+      expect(mockContext.req.query).toHaveBeenCalledWith('token')
+      expect(result).toEqual({ success: false, error: 'Token is required' })
+      expect(AuthService.verifyEmail).not.toHaveBeenCalled()
+
+    })
+
+    it('should return error when token is invalid', async () => {
+      // Arrange
+      const token = 'invalid-token'
+      const errorMessage = 'Invalid or expired verification token'
+
+      // Setup mocks
+      mockContext.req.query = vi.fn() as unknown as {
+        (key: string): string | undefined;
+        (): Record<string, string>;
+      };
+      (mockContext.req.query as any).mockImplementation((param?: string) => {
+        if (param === 'token') return token;
+        if (!param) return {}; // Return empty record when called with no args
+        return undefined;
+      });
+
+      // Mock the user service methods
+      vi.mocked(UserService.getUserByVerificationToken).mockRejectedValue(new Error(errorMessage))
+
+      // Act
+      const result = await AuthController.handleVerifyEmail(mockContext)
+
+      // Assert
+      expect(mockContext.req.query).toHaveBeenCalledWith('token')
+      expect(result).toEqual({ success: false, error: errorMessage })
+      expect(AuthService.verifyEmail).not.toHaveBeenCalled()
+
+    })
+
+    it('should return error when token is expired', async () => {
+      // Arrange
+      const token = 'expired-token'
+      const errorMessage = 'Verification token has expired'
+
+      const mockUser: User = {
+        id: 'user-123',
+        email: 'test@example.com',
+        emailVerifiedAt: null,
+        emailVerificationToken: token,
+        emailVerificationTokenExpiresAt: new Date(Date.now() - 1000),
+        name: 'Test User',
+        password: 'password123',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+      // Setup mocks
+      mockContext.req.query = vi.fn() as unknown as {
+        (key: string): string | undefined;
+        (): Record<string, string>;
+      };
+      (mockContext.req.query as any).mockImplementation((param?: string) => {
+        if (param === 'token') return token;
+        if (!param) return {}; // Return empty record when called with no args
+        return undefined;
+      });
+
+      // Mock the user service methods
+      vi.mocked(UserService.getUserByVerificationToken).mockResolvedValue(mockUser)
+      vi.mocked(UserService.updateUser).mockRejectedValue(new Error(errorMessage))
+
+      // Act
+      const result = await AuthController.handleVerifyEmail(mockContext)
+
+      // Assert
+      expect(mockContext.req.query).toHaveBeenCalledWith('token')
+      expect(result).toEqual({ success: false, error: errorMessage })
+      expect(AuthService.verifyEmail).not.toHaveBeenCalled()
+
+    })
   })
 }) 

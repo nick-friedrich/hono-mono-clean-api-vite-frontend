@@ -117,4 +117,34 @@ export class AuthService {
       emailVerificationNeeded: false
     }
   }
+
+  /**
+   * Verify email
+   * @param token - Verification token
+   * @returns True if email was verified
+   * @throws Error if token is invalid or expired
+   */
+  static async verifyEmail(token: string): Promise<boolean> {
+    // 1. Find user with this verification token
+    const user = await UserService.getUserByVerificationToken(token);
+
+    if (!user) {
+      throw new Error('Invalid or expired verification token');
+    }
+
+    // 2. Check if token is expired
+    if (user.emailVerificationTokenExpiresAt &&
+      user.emailVerificationTokenExpiresAt < new Date()) {
+      throw new Error('Verification token has expired');
+    }
+
+    // 3. Update user (using User service)
+    await UserService.updateUser(user.id, {
+      emailVerifiedAt: new Date(),
+      emailVerificationToken: null,
+      emailVerificationTokenExpiresAt: null
+    });
+
+    return true;
+  }
 }

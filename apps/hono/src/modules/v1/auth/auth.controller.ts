@@ -1,5 +1,5 @@
 import { Context } from "hono";
-import { LoginRequestSchema, RegisterRequestSchema, RouteLoginResponse, RouteRegisterResponse } from "./types";
+import { LoginRequestSchema, RegisterRequestSchema, RouteLoginResponse, RouteRegisterResponse, RouteVerifyEmailResponse, VerifyEmailRequestSchema } from "./types";
 import { AuthService } from "./auth.service";
 import { ZodError } from "zod";
 
@@ -61,4 +61,25 @@ export class AuthController {
   }
 
 
+  /**
+   * Handle verify email
+   * @param c - Context
+   * @returns Verify email response
+   */
+  static async handleVerifyEmail(c: Context): Promise<RouteVerifyEmailResponse> {
+    try {
+      // Parse request body
+      const token = c.req.query('token')
+      if (!token) {
+        return { success: false, error: "Token is required" }
+      }
+
+      // Verify email
+      const success = await AuthService.verifyEmail(token)
+
+      return { success }
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : "Verification failed" }
+    }
+  }
 }

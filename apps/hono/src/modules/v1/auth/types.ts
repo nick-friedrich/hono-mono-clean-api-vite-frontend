@@ -25,8 +25,21 @@ export const RegisterRequestSchema = z.object({
   name: z.string().optional().describe('User name'),
 })
 
+export const VerifyEmailResponseSchema = z.object({
+  success: z.boolean().describe('Success'),
+  error: z.string().describe('Error message').optional(),
+})
+
+export const VerifyEmailRequestSchema = z.object({
+  token: z.string().describe('Verification token'),
+})
+
+
 export type RouteLoginResponse = z.infer<typeof LoginResponseSchema>
 export type RouteLoginRequest = z.infer<typeof LoginRequestSchema>
 
 export type RouteRegisterResponse = z.infer<typeof RegisterResponseSchema>
-export type RouteRegisterRequest = z.infer<typeof RegisterRequestSchema> 
+export type RouteRegisterRequest = z.infer<typeof RegisterRequestSchema>
+
+export type RouteVerifyEmailResponse = z.infer<typeof VerifyEmailResponseSchema>
+export type RouteVerifyEmailRequest = z.infer<typeof VerifyEmailRequestSchema>

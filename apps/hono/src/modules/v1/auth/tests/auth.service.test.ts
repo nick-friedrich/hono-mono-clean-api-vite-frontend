@@ -10,7 +10,9 @@ import { ConsoleMailAdapter, getMailService } from '../../../../utils/email/emai
 vi.mock('../../user/user.service', () => ({
   UserService: {
     getUserByEmail: vi.fn(),
-    createUser: vi.fn()
+    getUserByVerificationToken: vi.fn(),
+    createUser: vi.fn(),
+    updateUser: vi.fn()
   }
 }))
 
@@ -274,5 +276,51 @@ describe('AuthService', () => {
       expect(result).toEqual({ token: undefined, emailVerificationNeeded: true })
     })
 
+
+    describe('verifyEmail', () => {
+      it('should verify email when token is valid', async () => {
+        // Arrange
+        const token = 'valid-token'
+        const user = { ...mockUser, emailVerificationToken: token }
+
+        vi.mocked(UserService.getUserByVerificationToken).mockResolvedValue(user)
+        vi.mocked(UserService.updateUser).mockResolvedValue(user)
+
+        // Act
+        const result = await AuthService.verifyEmail(token)
+
+        // Assert
+        expect(UserService.getUserByVerificationToken).toHaveBeenCalledWith(token)
+        expect(UserService.updateUser).toHaveBeenCalledWith(user.id, {
+          emailVerifiedAt: new Date(),
+          emailVerificationToken: null,
+          emailVerificationTokenExpiresAt: null
+        })
+        expect(result).toBe(true)
+      })
+    })
+
+    it('should throw an error when token is invalid', async () => {
+      // Arrange
+      const token = 'invalid-token'
+
+      vi.mocked(UserService.getUserByVerificationToken).mockResolvedValue(null)
+
+      // Act & Assert
+      await expect(AuthService.verifyEmail(token)).rejects.toThrow('Invalid or expired verification token')
+      expect(UserService.getUserByVerificationToken).toHaveBeenCalledWith(token)
+    })
+
+    it('should throw an error when token is expired', async () => {
+      // Arrange
+      const token = 'expired-token'
+      const user = { ...mockUser, emailVerificationToken: token, emailVerificationTokenExpiresAt: new Date(Date.now() - 1000) }
+
+      vi.mocked(UserService.getUserByVerificationToken).mockResolvedValue(user)
+
+      // Act & Assert
+      await expect(AuthService.verifyEmail(token)).rejects.toThrow('Verification token has expired')
+      expect(UserService.getUserByVerificationToken).toHaveBeenCalledWith(token)
+    })
   })
 }) 
