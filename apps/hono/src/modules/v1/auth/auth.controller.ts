@@ -28,7 +28,7 @@ export class AuthController {
       return { token }
     } catch (error) {
       if (error instanceof ZodError) {
-        return { error: error.issues.map(issue => issue.message).join(", ") }
+        return { error: error.issues.map(issue => issue.path + ": " + issue.message).join(", ") }
       }
       return { error: error instanceof Error ? error.message : "Authentication failed" }
     }
@@ -51,7 +51,7 @@ export class AuthController {
       return { token, emailVerificationNeeded: false }
     } catch (error) {
       if (error instanceof ZodError) {
-        return { error: error.issues.map(issue => issue.message).join(", ") }
+        return { error: error.issues.map(issue => issue.path + ": " + issue.message).join(", ") }
       }
       return { error: error instanceof Error ? error.message : "Registration failed" }
     }

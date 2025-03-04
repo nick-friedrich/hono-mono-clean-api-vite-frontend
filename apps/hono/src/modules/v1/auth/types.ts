@@ -10,7 +10,7 @@ export const LoginResponseSchema = z.object({
 
 export const LoginRequestSchema = z.object({
   email: z.string().email('Invalid email format').describe('Email'),
-  password: z.string().min(8, 'Password must be at least 8 characters').describe('Password'),
+  password: z.string().describe('Password'),
 })
 
 export const RegisterResponseSchema = z.object({
@@ -19,7 +19,9 @@ export const RegisterResponseSchema = z.object({
   emailVerificationNeeded: z.boolean().describe('Email verification needed').optional(),
 })
 
-export const RegisterRequestSchema = LoginRequestSchema.extend({
+export const RegisterRequestSchema = z.object({
+  email: z.string().email('Invalid email format').describe('Email'),
+  password: z.string().min(8, 'Password must be at least 8 characters').describe('Password'),
   name: z.string().optional().describe('User name'),
 })
 

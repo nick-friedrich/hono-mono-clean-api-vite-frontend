@@ -103,6 +103,21 @@ describe('AuthController', () => {
       expect(AuthService.loginWithEmailPassword).toHaveBeenCalledWith(email, password)
       expect(result).toEqual({ error: errorMessage })
     })
+
+    it('should return zoderror if email is not provided', async () => {
+      // Arrange
+      const email = ''
+      const password = 'password123'
+      const mockBody = { email, password }
+      mockContext.req.json = vi.fn().mockResolvedValue(mockBody)
+      // Act
+      const result = await AuthController.handleLogin(mockContext)
+
+      // Assert
+      expect(mockContext.req.json).toHaveBeenCalledTimes(1)
+      expect(AuthService.loginWithEmailPassword).not.toHaveBeenCalled()
+      expect(result).toEqual({ error: 'email: Invalid email format' })
+    })
   })
 
   describe('handleRegister', () => {
@@ -144,6 +159,36 @@ describe('AuthController', () => {
       expect(mockContext.req.json).toHaveBeenCalledTimes(1)
       expect(AuthService.signUpWithEmailPassword).toHaveBeenCalledWith(email, password, name)
       expect(result).toEqual({ error: errorMessage })
+    })
+
+    it('should return zoderror if email is not provided', async () => {
+      // Arrange
+      const email = ''
+      const password = 'password123'
+      const mockBody = { email, password }
+      mockContext.req.json = vi.fn().mockResolvedValue(mockBody)
+      // Act
+      const result = await AuthController.handleRegister(mockContext)
+
+      // Assert
+      expect(mockContext.req.json).toHaveBeenCalledTimes(1)
+      expect(AuthService.signUpWithEmailPassword).not.toHaveBeenCalled()
+      expect(result).toEqual({ error: 'email: Invalid email format' })
+    })
+
+    it('should return zoderror if password is not provided', async () => {
+      // Arrange
+      const email = 'newuser@example.com'
+      const password = ''
+      const mockBody = { email, password }
+      mockContext.req.json = vi.fn().mockResolvedValue(mockBody)
+      // Act
+      const result = await AuthController.handleRegister(mockContext)
+
+      // Assert
+      expect(mockContext.req.json).toHaveBeenCalledTimes(1)
+      expect(AuthService.signUpWithEmailPassword).not.toHaveBeenCalled()
+      expect(result).toEqual({ error: 'password: Password must be at least 8 characters' })
     })
 
   })
