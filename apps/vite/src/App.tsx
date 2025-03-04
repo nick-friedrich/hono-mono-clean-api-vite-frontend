@@ -5,6 +5,7 @@ import type {
   RouteHealth,
   RouteLoginResponse,
   RouteRegisterResponse,
+  RouteUserCurrentResponse,
 } from "@apps/hono";
 
 import "./App.css";
@@ -20,6 +21,14 @@ async function fetchClientSide<T>(
   path: string,
   options?: RequestInit
 ): Promise<T> {
+  // Bearer token
+  const token = localStorage.getItem("auth_token");
+  if (token) {
+    options = {
+      ...options,
+      headers: { ...options?.headers, Authorization: `Bearer ${token}` },
+    };
+  }
   const url = new URL(path, API_URL);
   return fetch(url, options).then((res) => res.json() as Promise<T>);
 }
@@ -43,6 +52,13 @@ function App() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+
+  // Fetch current user
+  useEffect(() => {
+    fetchClientSide<RouteUserCurrentResponse>("/api/v1/user/current")
+      .then((data) => setUser(data))
+      .catch(console.error);
+  }, []);
 
   // Check for verify-email-success query parameter on load
   useEffect(() => {

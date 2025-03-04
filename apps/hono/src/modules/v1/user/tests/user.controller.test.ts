@@ -20,7 +20,12 @@ describe('UserController', () => {
     mockContext = {
       req: {
         param: vi.fn().mockReturnValue('user-123')
-      }
+      },
+      get: vi.fn().mockReturnValue({
+        id: 'user-123',
+        email: 'test@example.com',
+        name: 'Test User'
+      })
     } as unknown as Context
   })
 
@@ -33,7 +38,10 @@ describe('UserController', () => {
         name: 'Test User',
         password: 'hashed-password',
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        emailVerificationToken: null,
+        emailVerificationTokenExpiresAt: null,
+        emailVerifiedAt: new Date()
       }
 
       vi.mocked(UserService.getUserById).mockResolvedValue(mockUser)
@@ -85,4 +93,43 @@ describe('UserController', () => {
       expect(UserService.getUserById).toHaveBeenCalledWith('user-123')
     })
   })
+
+  describe('handleGetCurrentUser', () => {
+    it('should return current user details', async () => {
+      // Arrange
+      const mockUser = {
+        id: 'user-123',
+        email: 'test@example.com',
+        name: 'Test User',
+        password: 'hashed-password',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        emailVerificationToken: null,
+        emailVerificationTokenExpiresAt: null,
+        emailVerifiedAt: new Date()
+      }
+
+      vi.mocked(UserService.getUserById).mockResolvedValue(mockUser)
+
+      // Act
+      const result = await UserController.handleGetCurrentUser(mockContext)
+
+      // Assert
+      expect(result).toEqual({
+        id: 'user-123',
+        email: 'test@example.com',
+        name: 'Test User'
+      })
+    })
+
+    it('should throw an error when user is not found', async () => {
+      // Arrange
+      vi.mocked(UserService.getUserById).mockResolvedValue(null)
+      vi.mocked(mockContext.get).mockReturnValue(null)
+
+      // Act & Assert
+      await expect(UserController.handleGetCurrentUser(mockContext)).rejects.toThrow('User not found')
+    })
+  })
+
 }) 
