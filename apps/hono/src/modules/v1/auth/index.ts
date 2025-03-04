@@ -59,32 +59,6 @@ const registerRoute = createRoute({
   description: 'Register a new user'
 })
 
-const verifyEmailRoute = createRoute({
-  method: 'post',
-  path: '/verify-email',
-  request: {
-    body: {
-      content: {
-        'application/json': {
-          schema: VerifyEmailRequestSchema
-        }
-      }
-    }
-  },
-  responses: {
-    200: {
-      content: {
-        'application/json': {
-          schema: VerifyEmailResponseSchema
-        }
-      },
-      description: 'Verify email'
-    }
-  },
-  tags: ['Auth'],
-  summary: 'Verify email',
-  description: 'Verify email'
-})
 
 auth.openapi(loginRoute, async (c) => {
   const result = await AuthController.handleLogin(c)
@@ -96,10 +70,13 @@ auth.openapi(registerRoute, async (c) => {
   return c.json(result)
 })
 
-auth.openapi(verifyEmailRoute, async (c) => {
+// Use regular route instead of openapi for verify email
+auth.get('/verify-email', async (c) => {
   const result = await AuthController.handleVerifyEmail(c)
   if (result.success) {
-    c.redirect(`${process.env.FRONTEND_URL}/auth/login?verify-email-success=true`)
+    if (process.env.FRONTEND_URL) {
+      return c.redirect(`${process.env.FRONTEND_URL}/auth/login?verify-email-success=true`)
+    }
   }
   return c.json(result)
 })

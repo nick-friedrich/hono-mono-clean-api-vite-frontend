@@ -227,22 +227,73 @@ describe('Auth Routes (E2E)', () => {
     })
   })
 
-  describe('POST /api/v1/auth/verify-email', () => {
+  describe('GET /api/v1/auth/verify-email', () => {
     it('should return 200 when email is verified', async () => {
       // Arrange
       const token = 'valid-token'
       vi.mocked(AuthService.verifyEmail).mockResolvedValue(true)
 
-      // Act
+      // Save original env and unset FRONTEND_URL to prevent redirect
+      const originalFrontendUrl = process.env.FRONTEND_URL
+      delete process.env.FRONTEND_URL
+
+      // Act - Changed to GET method
       const res = await app.request(`/api/v1/auth/verify-email?token=${token}`, {
-        method: 'POST',
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      })
+
+      // Restore env
+      process.env.FRONTEND_URL = originalFrontendUrl
+
+      // Assert
+      expect(res.status).toBe(200)
+      const data = await res.json()
+      expect(data).toEqual({ success: true })
+    })
+
+    it('should redirect when email is verified and FRONTEND_URL is set', async () => {
+      // Arrange
+      const token = 'valid-token'
+      vi.mocked(AuthService.verifyEmail).mockResolvedValue(true)
+
+      // Set FRONTEND_URL to test redirect
+      process.env.FRONTEND_URL = 'https://example.com'
+
+      // Act - Changed to GET method
+      const res = await app.request(`/api/v1/auth/verify-email?token=${token}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        redirect: 'manual', // Don't automatically follow redirects
+      })
+
+      // Assert
+      expect(res.status).toBe(302) // 302 is redirect status
+      expect(res.headers.get('location')).toBe('https://example.com/auth/login?verify-email-success=true')
+    })
+
+    it('should return error when token is invalid', async () => {
+      // Arrange
+      const token = 'invalid-token'
+      const errorMessage = 'Invalid or expired verification token'
+      vi.mocked(AuthService.verifyEmail).mockRejectedValue(new Error(errorMessage))
+
+      // Act - Changed to GET method
+      const res = await app.request(`/api/v1/auth/verify-email?token=${token}`, {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json'
         },
       })
 
       // Assert
-      expect(res.status).toBe(200)
+      expect(res.status).toBe(200) // Error is returned in response body, not as HTTP error
+      const data = await res.json()
+      expect(data).toEqual({ success: false, error: errorMessage })
     })
   })
 
