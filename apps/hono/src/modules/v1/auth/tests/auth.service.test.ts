@@ -170,6 +170,7 @@ describe('AuthService', () => {
         password: hashedPassword
       })
       vi.mocked(jwtUtils.generateJWT).mockResolvedValue(mockToken)
+      AuthService.EMAIL_VERIFICATION_NEEDED = false
 
       // Act
       const result = await AuthService.signUpWithEmailPassword(email, password, name)
@@ -187,7 +188,7 @@ describe('AuthService', () => {
       expect(jwtUtils.generateJWT).toHaveBeenCalledWith(expect.objectContaining({
         email
       }))
-      expect(result).toBe(mockToken)
+      expect(result).toEqual({ token: mockToken, emailVerificationNeeded: false })
     })
 
     it('should use email prefix as name when name is not provided', async () => {
@@ -206,6 +207,7 @@ describe('AuthService', () => {
         password: hashedPassword
       })
       vi.mocked(jwtUtils.generateJWT).mockResolvedValue(mockToken)
+      AuthService.EMAIL_VERIFICATION_NEEDED = false
 
       // Act
       const result = await AuthService.signUpWithEmailPassword(email, password)
@@ -218,7 +220,7 @@ describe('AuthService', () => {
         createdAt: new Date('2023-01-01'),
         updatedAt: new Date('2023-01-01')
       }))
-      expect(result).toBe(mockToken)
+      expect(result).toEqual({ token: mockToken, emailVerificationNeeded: false })
     })
 
     it('should throw an error when user already exists', async () => {
@@ -234,5 +236,28 @@ describe('AuthService', () => {
       expect(passwordUtils.hashPassword).not.toHaveBeenCalled()
       expect(UserService.createUser).not.toHaveBeenCalled()
     })
+
+    it('should return undefined token when email verification is needed', async () => {
+      // Arrange
+      const email = 'newuser@example.com'
+      const password = 'password123'
+
+      AuthService.EMAIL_VERIFICATION_NEEDED = true
+      vi.mocked(UserService.getUserByEmail).mockResolvedValue(null)
+      // Act
+      const result = await AuthService.signUpWithEmailPassword(email, password)
+
+      // Assert
+      expect(UserService.getUserByEmail).toHaveBeenCalledWith(email)
+      expect(passwordUtils.hashPassword).toHaveBeenCalledWith(password)
+      expect(UserService.createUser).toHaveBeenCalledWith(expect.objectContaining({
+        email,
+        emailVerificationToken: expect.any(String),
+        emailVerificationTokenExpiresAt: expect.any(Date),
+        emailVerifiedAt: null
+      }))
+      expect(result).toEqual({ token: undefined, emailVerificationNeeded: true })
+    })
+
   })
 }) 

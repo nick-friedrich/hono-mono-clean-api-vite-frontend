@@ -46,9 +46,12 @@ export class AuthController {
       const { email, password, name } = RegisterRequestSchema.parse(body)
 
       // Register user
-      const token = await AuthService.signUpWithEmailPassword(email, password, name)
+      const { token, emailVerificationNeeded } = await AuthService.signUpWithEmailPassword(email, password, name)
 
-      return { token, emailVerificationNeeded: false }
+      return {
+        token: token,
+        emailVerificationNeeded
+      }
     } catch (error) {
       if (error instanceof ZodError) {
         return { error: error.issues.map(issue => issue.path + ": " + issue.message).join(", ") }

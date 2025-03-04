@@ -120,7 +120,7 @@ describe('Auth Routes (E2E)', () => {
     it('should return 200 and token when registration is successful', async () => {
       // Arrange
       const mockToken = 'mock-jwt-token'
-      vi.mocked(AuthService.signUpWithEmailPassword).mockResolvedValue(mockToken)
+      vi.mocked(AuthService.signUpWithEmailPassword).mockResolvedValue({ token: mockToken, emailVerificationNeeded: false })
 
       const requestBody = {
         email: 'newuser@example.com',
@@ -151,7 +151,7 @@ describe('Auth Routes (E2E)', () => {
     it('should accept registration without name', async () => {
       // Arrange
       const mockToken = 'mock-jwt-token'
-      vi.mocked(AuthService.signUpWithEmailPassword).mockResolvedValue(mockToken)
+      vi.mocked(AuthService.signUpWithEmailPassword).mockResolvedValue({ token: mockToken, emailVerificationNeeded: false })
 
       const requestBody = {
         email: 'newuser@example.com',

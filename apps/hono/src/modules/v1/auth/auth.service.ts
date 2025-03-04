@@ -1,7 +1,7 @@
 import { UserService } from "../user/user.service";
 import { generateRandomPassword, hashPassword, verifyPassword } from "../../../utils/password";
 import { generateJWT } from "../../../utils/jwt";
-import { db } from "@packages/prisma";
+import { db, User } from "@packages/prisma";
 
 /**
  * Auth service
@@ -59,7 +59,7 @@ export class AuthService {
    * @returns Token
    * @throws Error if user already exists
    */
-  static async signUpWithEmailPassword(email: string, password: string, name?: string): Promise<string> {
+  static async signUpWithEmailPassword(email: string, password: string, name?: string): Promise<{ token: string | undefined, emailVerificationNeeded: boolean }> {
     // Check if user already exists
     const existingUser = await UserService.getUserByEmail(email)
     if (existingUser) {
@@ -69,22 +69,43 @@ export class AuthService {
     // Hash password
     const hashedPassword = await hashPassword(password)
 
-    // Create user
-    const user = await UserService.createUser({
+    let newUser: Partial<User> = {
       email,
       password: hashedPassword,
       name: name || email.split('@')[0],
       createdAt: new Date(),
       updatedAt: new Date(),
-      id: crypto.randomUUID()
-    })
+    }
 
-    // Generate JWT token
+    // If email verification is needed, add email verification token and expiration date
+    if (AuthService.EMAIL_VERIFICATION_NEEDED) {
+      newUser.emailVerificationToken = crypto.randomUUID()
+      newUser.emailVerificationTokenExpiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24) // 1 day
+      newUser.emailVerifiedAt = null
+    }
+
+    // Create user
+    const user = await UserService.createUser(newUser)
+
+
+    if (AuthService.EMAIL_VERIFICATION_NEEDED) {
+      // TODO: Send verification email
+      return {
+        token: undefined,
+        emailVerificationNeeded: true
+      }
+    }
+
+    // If email verification is not needed, generate JWT token
+
     const token = await generateJWT({
       sub: user.id,
       email: user.email
     })
 
-    return token
+    return {
+      token,
+      emailVerificationNeeded: false
+    }
   }
 }

@@ -130,7 +130,7 @@ describe('AuthController', () => {
 
       // Setup mocks
       mockContext.req.json = vi.fn().mockResolvedValue({ email, password, name })
-      vi.mocked(AuthService.signUpWithEmailPassword).mockResolvedValue(mockToken)
+      vi.mocked(AuthService.signUpWithEmailPassword).mockResolvedValue({ token: mockToken, emailVerificationNeeded: false })
 
       // Act
       const result = await AuthController.handleRegister(mockContext)
