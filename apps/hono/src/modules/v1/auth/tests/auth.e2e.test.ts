@@ -6,7 +6,8 @@ import { AuthService } from '../auth.service'
 vi.mock('../auth.service', () => ({
   AuthService: {
     loginWithEmailPassword: vi.fn(),
-    signUpWithEmailPassword: vi.fn()
+    signUpWithEmailPassword: vi.fn(),
+    verifyEmail: vi.fn()
   }
 }))
 
@@ -225,4 +226,24 @@ describe('Auth Routes (E2E)', () => {
       expect(AuthService.signUpWithEmailPassword).not.toHaveBeenCalled()
     })
   })
+
+  describe('POST /api/v1/auth/verify-email', () => {
+    it('should return 200 when email is verified', async () => {
+      // Arrange
+      const token = 'valid-token'
+      vi.mocked(AuthService.verifyEmail).mockResolvedValue(true)
+
+      // Act
+      const res = await app.request(`/api/v1/auth/verify-email?token=${token}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      })
+
+      // Assert
+      expect(res.status).toBe(200)
+    })
+  })
+
 }) 

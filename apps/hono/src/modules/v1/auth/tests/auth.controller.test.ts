@@ -284,8 +284,8 @@ describe('AuthController', () => {
         return undefined;
       });
 
-      // Mock the user service methods
-      vi.mocked(UserService.getUserByVerificationToken).mockRejectedValue(new Error(errorMessage))
+      // THIS IS THE KEY CHANGE - mock AuthService.verifyEmail to throw error
+      vi.mocked(AuthService.verifyEmail).mockRejectedValue(new Error(errorMessage));
 
       // Act
       const result = await AuthController.handleVerifyEmail(mockContext)
@@ -293,8 +293,6 @@ describe('AuthController', () => {
       // Assert
       expect(mockContext.req.query).toHaveBeenCalledWith('token')
       expect(result).toEqual({ success: false, error: errorMessage })
-      expect(AuthService.verifyEmail).not.toHaveBeenCalled()
-
     })
 
     it('should return error when token is expired', async () => {
@@ -324,9 +322,8 @@ describe('AuthController', () => {
         return undefined;
       });
 
-      // Mock the user service methods
-      vi.mocked(UserService.getUserByVerificationToken).mockResolvedValue(mockUser)
-      vi.mocked(UserService.updateUser).mockRejectedValue(new Error(errorMessage))
+      // THIS IS THE KEY CHANGE - mock AuthService.verifyEmail to throw error
+      vi.mocked(AuthService.verifyEmail).mockRejectedValue(new Error(errorMessage));
 
       // Act
       const result = await AuthController.handleVerifyEmail(mockContext)
@@ -334,8 +331,6 @@ describe('AuthController', () => {
       // Assert
       expect(mockContext.req.query).toHaveBeenCalledWith('token')
       expect(result).toEqual({ success: false, error: errorMessage })
-      expect(AuthService.verifyEmail).not.toHaveBeenCalled()
-
     })
   })
 }) 
